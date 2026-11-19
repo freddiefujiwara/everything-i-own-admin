@@ -11,6 +11,15 @@ import {
   clearSavedSession,
 } from '../session.js'
 
+// A list in an /exec response is trusted only as far as its shape:
+// a missing or non-array list reads as empty, and entries that are
+// not objects are dropped (a null row would break the list's
+// rendering, which dereferences entry fields).
+const asEntries = (value) =>
+  Array.isArray(value)
+    ? value.filter((entry) => entry !== null && typeof entry === 'object')
+    : []
+
 // State and API orchestration for the admin page, mirroring the alarm
 // site's main.js: the owner's session token (exchanged from the
 // Google ID token at sign-in) or a share token from a temporary
@@ -122,11 +131,15 @@ export function useAdmin() {
     for (const { sheet, res } of results) {
       if (sheet.kind === 'subscriptions') {
         entries.push(
-          ...res.subscriptions.map((sub) => ({ ...sub, sheet: sheet.key, kind: sheet.kind })),
+          ...asEntries(res.subscriptions).map((sub) => ({
+            ...sub,
+            sheet: sheet.key,
+            kind: sheet.kind,
+          })),
         )
       } else {
         entries.push(
-          ...res.items.map((item) => ({ ...item, sheet: sheet.key, kind: sheet.kind })),
+          ...asEntries(res.items).map((item) => ({ ...item, sheet: sheet.key, kind: sheet.kind })),
         )
       }
     }
@@ -163,11 +176,11 @@ export function useAdmin() {
         return res
       }
       if (sheetKind(currentSheet.value) === 'subscriptions') {
-        subscriptions.value = res.subscriptions
-        listStatus.value = `${res.subscriptions.length}件`
+        subscriptions.value = asEntries(res.subscriptions)
+        listStatus.value = `${subscriptions.value.length}件`
       } else {
-        items.value = res.items
-        listStatus.value = `${res.items.length}件`
+        items.value = asEntries(res.items)
+        listStatus.value = `${items.value.length}件`
       }
       return res
     } catch (err) {
@@ -183,7 +196,9 @@ export function useAdmin() {
     try {
       const res = await apiRead({ action: 'list_genres' })
       if (res.ok) {
-        genres.value = res.genres || []
+        genres.value = Array.isArray(res.genres)
+          ? res.genres.filter((genre) => typeof genre === 'string')
+          : []
       }
       return res
     } catch (err) {

@@ -42,34 +42,38 @@ export function formatPrice(value) {
 }
 
 // The meta line under an item title: price (with unit when > 1),
-// genre and comment, joined the way the sheet reads.
+// genre and comment, joined the way the sheet reads. A missing
+// entry (a deformed payload row) reads as a blank line.
 export function itemMeta(item) {
+  const entry = item ?? {}
   const parts = []
-  const price = formatPrice(item.price)
+  const price = formatPrice(entry.price)
   if (price) {
-    const unit = Number(item.unit)
+    const unit = Number(entry.unit)
     parts.push(Number.isFinite(unit) && unit > 1 ? `${price} ×${unit}` : price)
   }
-  if (item.genre) {
-    parts.push(String(item.genre))
+  if (entry.genre) {
+    parts.push(String(entry.genre))
   }
-  if (item.comment) {
-    parts.push(String(item.comment))
+  if (entry.comment) {
+    parts.push(String(entry.comment))
   }
   return parts.join(' / ')
 }
 
 // Copy a listed item into the edit form (price/unit become plain
-// input values; blank stays blank).
+// input values; blank stays blank). A missing entry opens the
+// blank form.
 export function formFromItem(item) {
+  const entry = item ?? {}
   return {
-    title: item.title ?? '',
-    image: item.image ?? '',
-    url: item.url ?? '',
-    price: item.price ?? '',
-    unit: item.unit ?? '',
-    genre: item.genre ?? '',
-    comment: item.comment ?? '',
+    title: entry.title ?? '',
+    image: entry.image ?? '',
+    url: entry.url ?? '',
+    price: entry.price ?? '',
+    unit: entry.unit ?? '',
+    genre: entry.genre ?? '',
+    comment: entry.comment ?? '',
   }
 }
 
@@ -93,8 +97,12 @@ export function isFlagged(entry) {
 }
 
 // The list filter behind the 整理対象のみ toggle: pass-through
-// unless the filter is on.
+// unless the filter is on. A non-list (a deformed payload) reads
+// as an empty list.
 export function filterFlagged(entries, flaggedOnly) {
+  if (!Array.isArray(entries)) {
+    return []
+  }
   return flaggedOnly ? entries.filter((entry) => isFlagged(entry)) : entries
 }
 
@@ -112,32 +120,34 @@ export function emptySubscription() {
 
 // Copy a listed subscription into the edit form: the amount input
 // shows the entered side (the basis side); the other side is derived
-// by the sheet's formulas.
+// by the sheet's formulas. A missing entry opens the blank form.
 export function formFromSubscription(sub) {
-  const basis = sub.basis === 'monthly' ? 'monthly' : 'yearly'
+  const entry = sub ?? {}
+  const basis = entry.basis === 'monthly' ? 'monthly' : 'yearly'
   return {
-    service: sub.service ?? '',
-    purpose: sub.purpose ?? '',
+    service: entry.service ?? '',
+    purpose: entry.purpose ?? '',
     basis,
-    amount: basis === 'monthly' ? (sub.monthly ?? '') : (sub.yearly ?? ''),
-    url: sub.url ?? '',
+    amount: basis === 'monthly' ? (entry.monthly ?? '') : (entry.yearly ?? ''),
+    url: entry.url ?? '',
   }
 }
 
 // The cost line under a subscription name: yearly and monthly amounts
 // (computed by the sheet) and the share of the monthly total when
-// the sheet carries a ratio.
+// the sheet carries a ratio. A missing entry reads as a blank line.
 export function subscriptionCost(sub) {
+  const entry = sub ?? {}
   const parts = []
-  const yearly = formatPrice(sub.yearly)
-  const monthly = formatPrice(sub.monthly)
+  const yearly = formatPrice(entry.yearly)
+  const monthly = formatPrice(entry.monthly)
   if (yearly) {
     parts.push(`年 ${yearly}`)
   }
   if (monthly) {
     parts.push(`月 ${monthly}`)
   }
-  const ratio = Number(sub.ratio)
+  const ratio = Number(entry.ratio)
   if (Number.isFinite(ratio) && ratio > 0) {
     parts.push(`${(ratio * 100).toFixed(1)}%`)
   }
