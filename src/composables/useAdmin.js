@@ -239,7 +239,7 @@ export function useAdmin() {
   }
 
   const onCredential = async (credential) => {
-    // No client-side authorization gate: list-of-stuff-gas verifies
+    // No client-side authorization gate: everything-i-own-gas verifies
     // the token and the account, and rejects unauthorized calls
     // server-side.
     try {

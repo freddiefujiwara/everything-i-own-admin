@@ -5,14 +5,14 @@
 // expires after about an hour and is never stored.
 //
 // Production and staging are served from the same origin (paths
-// /list-of-stuff-admin/ and /list-of-stuff-admin/staging/) and therefore share localStorage.
+// /everything-i-own-admin/ and /everything-i-own-admin/staging/) and therefore share localStorage.
 // Staging builds use ":staging"-suffixed keys — the convention the
 // blog introduced for its list cache — so the two environments can
 // never read or clear each other's saved session.
 import { isStagingBuild } from "./staging-banner.js";
 
-export const SESSION_TOKEN_STORAGE_KEY = "list-of-stuff-admin-session-token";
-export const SESSION_EMAIL_STORAGE_KEY = "list-of-stuff-admin-session-email";
+export const SESSION_TOKEN_STORAGE_KEY = "everything-i-own-admin-session-token";
+export const SESSION_EMAIL_STORAGE_KEY = "everything-i-own-admin-session-email";
 
 /** The storage key for this build; staging gets a ":staging" suffix. */
 export function sessionKey(baseKey, staging = isStagingBuild()) {

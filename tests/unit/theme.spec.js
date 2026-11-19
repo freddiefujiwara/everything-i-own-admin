@@ -3,7 +3,7 @@ import { THEME_KEY, applyTheme, nextTheme, resolveTheme } from '../../src/theme.
 
 describe('theme', () => {
   it('exposes a per-app storage key', () => {
-    expect(THEME_KEY).toBe('list-of-stuff-admin-theme')
+    expect(THEME_KEY).toBe('everything-i-own-admin-theme')
   })
 
   it('resolves only "light" to light, everything else to dark', () => {

@@ -1,8 +1,8 @@
 # A Minimalist's List of Stuff
 
-[![Node.js CI](https://github.com/freddiefujiwara/list-of-stuff-admin/actions/workflows/node.js.yml/badge.svg)](https://github.com/freddiefujiwara/list-of-stuff-admin/actions/workflows/node.js.yml)
+[![Node.js CI](https://github.com/freddiefujiwara/everything-i-own-admin/actions/workflows/node.js.yml/badge.svg)](https://github.com/freddiefujiwara/everything-i-own-admin/actions/workflows/node.js.yml)
 
-[Live Demo](https://freddiefujiwara.com/list-of-stuff-admin/)
+[Live Demo](https://freddiefujiwara.com/everything-i-own-admin/)
 
 This is the private admin site for a minimalist's list of belongings.
 It manages the hand-edited sheets (workman, variety, others and
@@ -19,7 +19,7 @@ by the Rakuten ROOM sync and is not editable here.
 -   Google sign-in restricted to the owner's account, plus temporary
     access links (one month) issued by the owner, the same scheme as
     the alarm, health and tweet admin sites.
--   Writes go through the list-of-stuff-gas admin API (doPost), which
+-   Writes go through the everything-i-own-gas admin API (doPost), which
     verifies the ID token or share token before touching the sheet.
 
 ## Tech Stack

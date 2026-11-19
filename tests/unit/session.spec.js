@@ -28,7 +28,7 @@ describe('session storage', () => {
     const storage = fakeStorage()
     saveSessionToken('sess-1', storage, false)
     saveSessionEmail('owner@example.com', storage, false)
-    expect(storage.map.get('list-of-stuff-admin-session-token')).toBe('sess-1')
+    expect(storage.map.get('everything-i-own-admin-session-token')).toBe('sess-1')
     expect(loadSavedSessionToken(storage, false)).toBe('sess-1')
     expect(loadSavedSessionEmail(storage, false)).toBe('owner@example.com')
   })
@@ -47,7 +47,7 @@ describe('session storage', () => {
     saveSessionToken('prod', storage, false)
     saveSessionToken('staging', storage, true)
     expect(sessionKey(SESSION_TOKEN_STORAGE_KEY, true)).toBe(
-      'list-of-stuff-admin-session-token:staging',
+      'everything-i-own-admin-session-token:staging',
     )
     expect(loadSavedSessionToken(storage, false)).toBe('prod')
     expect(loadSavedSessionToken(storage, true)).toBe('staging')

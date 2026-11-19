@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig(({ mode }) => ({
-  base: mode === 'staging' ? '/list-of-stuff-admin/staging/' : mode === 'production' ? '/list-of-stuff-admin/' : '/',
+  base: mode === 'staging' ? '/everything-i-own-admin/staging/' : mode === 'production' ? '/everything-i-own-admin/' : '/',
   plugins: [vue()],
   test: {
     globals: true,

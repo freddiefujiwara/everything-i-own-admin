@@ -1,4 +1,4 @@
-// Send one admin action to the list-of-stuff-gas endpoint with the Google ID
+// Send one admin action to the everything-i-own-gas endpoint with the Google ID
 // token. The body is JSON sent as text/plain, the same transport the
 // tweet site uses (it avoids a CORS preflight against Apps Script).
 // Returns the parsed JSON response ({ ok: true, ... } or
