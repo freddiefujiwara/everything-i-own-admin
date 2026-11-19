@@ -1,17 +1,17 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { ALL_TAB, FALLBACK_IMAGE_URL, GOOGLE_CLIENT_ID, SHEETS, sheetKind } from './constants/app.js'
+import { ALL_TAB, GOOGLE_CLIENT_ID, SHEETS, sheetKind } from './constants/app.js'
 import { useAdmin } from './composables/useAdmin.js'
+import ItemForm from './components/ItemForm.vue'
+import ItemRow from './components/ItemRow.vue'
+import SheetTabs from './components/SheetTabs.vue'
 import {
   emptyItem,
   emptySubscription,
   filterFlagged,
   formFromItem,
   formFromSubscription,
-  itemMeta,
   shareLinkView,
-  sheetLabel,
-  subscriptionCost,
 } from './utils/admin.js'
 import { THEME_KEY, applyTheme, nextTheme, resolveTheme } from './theme.js'
 import {
@@ -238,13 +238,6 @@ const listTitle = computed(() => {
     : '登録中のアイテム'
 })
 
-const onThumbError = (event) => {
-  const img = event.target
-  if (img.src !== FALLBACK_IMAGE_URL) {
-    img.src = FALLBACK_IMAGE_URL
-  }
-}
-
 // --- Share link management (owner only, same as the alarm site) ---
 const issuedShare = ref(null)
 const shareError = ref('')
@@ -454,20 +447,7 @@ const onLogout = () => {
         <template v-else></template>
         <p v-if="email" class="meta">{{ email }} でログイン中</p>
         <template v-else></template>
-        <div class="builder-tabs sheet-tabs" role="tablist" aria-label="シート">
-          <button
-            v-for="sheet in listSheets"
-            :key="sheet.key"
-            type="button"
-            class="builder-tab"
-            :class="{ active: currentSheet === sheet.key }"
-            role="tab"
-            :aria-selected="currentSheet === sheet.key"
-            @click="onListSheet(sheet.key)"
-          >
-            {{ sheet.tabLabel }}
-          </button>
-        </div>
+        <SheetTabs :sheets="listSheets" :current="currentSheet" @select="onListSheet" />
         <div class="builder-tabs" role="tablist" aria-label="表示フィルター">
           <button
             type="button"
@@ -495,260 +475,61 @@ const onLogout = () => {
         </div>
         <template v-else>
         <div v-if="currentSheet === 'all'">
-          <div v-for="entry in visibleCombined" :key="`${entry.sheet}:${entry.row}`" class="alarm-row" :class="{ flagged: Boolean(entry.flag) }">
-            <div v-if="entry.kind === 'subscriptions'" class="item-main">
-              <div>
-                <div class="item-title"><a v-if="entry.url" class="item-link" :href="entry.url" target="_blank" rel="noopener noreferrer">{{ entry.service }}</a><template v-else>{{ entry.service }}</template><span class="sheet-badge">{{ sheetLabel(entry.sheet) }}</span><span v-if="entry.flag" class="flag-badge">整理対象</span><template v-else></template></div>
-                <div v-if="entry.purpose" class="alarm-commands">{{ entry.purpose }}</div>
-                <template v-else></template>
-                <div class="alarm-commands">{{ subscriptionCost(entry) }}</div>
-                <div v-if="entry.url" class="alarm-commands">{{ entry.url }}</div>
-                <template v-else></template>
-              </div>
-            </div>
-            <div v-else class="item-main">
-              <img
-                class="item-thumb"
-                :src="entry.image || FALLBACK_IMAGE_URL"
-                alt=""
-                loading="lazy"
-                @error="onThumbError"
-              />
-              <div>
-                <div class="item-title"><a v-if="entry.url" class="item-link" :href="entry.url" target="_blank" rel="noopener noreferrer">{{ entry.title }}</a><template v-else>{{ entry.title }}</template><span class="sheet-badge">{{ sheetLabel(entry.sheet) }}</span><span v-if="entry.flag" class="flag-badge">整理対象</span><template v-else></template></div>
-                <div class="alarm-commands">{{ itemMeta(entry) }}</div>
-                <div v-if="entry.url" class="alarm-commands">{{ entry.url }}</div>
-                <template v-else></template>
-              </div>
-            </div>
-            <div class="row-actions">
-              <button
-                type="button"
-                class="icon-btn flag-btn"
-                :class="{ active: Boolean(entry.flag) }"
-                title="整理対象"
-                aria-label="整理対象フラグ"
-                :aria-pressed="Boolean(entry.flag)"
-                @click="toggleFlag(entry)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
-              </button>
-              <button
-                v-if="entry.sheet !== 'room'"
-                type="button"
-                class="icon-btn"
-                title="編集"
-                aria-label="編集"
-                @click="openEdit(entry)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-              </button>
-              <template v-else></template>
-              <button
-                v-if="entry.sheet !== 'room'"
-                type="button"
-                class="icon-btn"
-                title="削除"
-                aria-label="削除"
-                @click="remove(entry)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-              <template v-else></template>
-            </div>
-          </div>
+          <ItemRow
+            v-for="entry in visibleCombined"
+            :key="`${entry.sheet}:${entry.row}`"
+            :entry="entry"
+            :sub="entry.kind === 'subscriptions'"
+            sheet-badge
+            :editable="entry.sheet !== 'room'"
+            @toggle-flag="toggleFlag"
+            @edit="openEdit"
+            @remove="remove"
+          />
         </div>
         <div v-else-if="sheetKind(currentSheet) !== 'subscriptions'">
-          <div v-for="item in visibleItems" :key="item.row" class="alarm-row" :class="{ flagged: Boolean(item.flag) }">
-            <div class="item-main">
-              <img
-                class="item-thumb"
-                :src="item.image || FALLBACK_IMAGE_URL"
-                alt=""
-                loading="lazy"
-                @error="onThumbError"
-              />
-              <div>
-                <div class="item-title"><a v-if="item.url" class="item-link" :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.title }}</a><template v-else>{{ item.title }}</template><span v-if="item.flag" class="flag-badge">整理対象</span><template v-else></template></div>
-                <div class="alarm-commands">{{ itemMeta(item) }}</div>
-                <div v-if="item.url" class="alarm-commands">{{ item.url }}</div>
-                <template v-else></template>
-              </div>
-            </div>
-            <div class="row-actions">
-              <button
-                type="button"
-                class="icon-btn flag-btn"
-                :class="{ active: Boolean(item.flag) }"
-                title="整理対象"
-                aria-label="整理対象フラグ"
-                :aria-pressed="Boolean(item.flag)"
-                @click="toggleFlag(item)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
-              </button>
-              <template v-if="sheetKind(currentSheet) !== 'room'">
-              <button
-                type="button"
-                class="icon-btn"
-                title="編集"
-                aria-label="編集"
-                @click="openEdit(item)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-              </button>
-              <button
-                type="button"
-                class="icon-btn"
-                title="削除"
-                aria-label="削除"
-                @click="remove(item)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-              </template>
-              <template v-else></template>
-            </div>
-          </div>
+          <ItemRow
+            v-for="item in visibleItems"
+            :key="item.row"
+            :entry="item"
+            :editable="sheetKind(currentSheet) !== 'room'"
+            @toggle-flag="toggleFlag"
+            @edit="openEdit"
+            @remove="remove"
+          />
         </div>
         <div v-else>
-          <div v-for="sub in visibleSubscriptions" :key="sub.row" class="alarm-row" :class="{ flagged: Boolean(sub.flag) }">
-            <div class="item-main">
-              <div>
-                <div class="item-title"><a v-if="sub.url" class="item-link" :href="sub.url" target="_blank" rel="noopener noreferrer">{{ sub.service }}</a><template v-else>{{ sub.service }}</template><span v-if="sub.flag" class="flag-badge">整理対象</span><template v-else></template></div>
-                <div v-if="sub.purpose" class="alarm-commands">{{ sub.purpose }}</div>
-                <template v-else></template>
-                <div class="alarm-commands">{{ subscriptionCost(sub) }}</div>
-                <div v-if="sub.url" class="alarm-commands">{{ sub.url }}</div>
-                <template v-else></template>
-              </div>
-            </div>
-            <div class="row-actions">
-              <button
-                type="button"
-                class="icon-btn flag-btn"
-                :class="{ active: Boolean(sub.flag) }"
-                title="整理対象"
-                aria-label="整理対象フラグ"
-                :aria-pressed="Boolean(sub.flag)"
-                @click="toggleFlag(sub)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
-              </button>
-              <button
-                type="button"
-                class="icon-btn"
-                title="編集"
-                aria-label="編集"
-                @click="openEdit(sub)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-              </button>
-              <button
-                type="button"
-                class="icon-btn"
-                title="削除"
-                aria-label="削除"
-                @click="remove(sub)"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-            </div>
-          </div>
+          <ItemRow
+            v-for="sub in visibleSubscriptions"
+            :key="sub.row"
+            :entry="sub"
+            sub
+            @toggle-flag="toggleFlag"
+            @edit="openEdit"
+            @remove="remove"
+          />
         </div>
         </template>
         <p class="meta">{{ listStatus }}</p>
       </section>
       <template v-else></template>
 
-      <section v-if="phase === 'ready' && tab === 'form'" class="table-wrap">
-        <h2 class="section-title">{{ formTitle }}</h2>
-        <div v-if="editingRow === null" class="builder-tabs sheet-tabs" role="tablist" aria-label="シート">
-          <button
-            v-for="sheet in formSheets"
-            :key="sheet.key"
-            type="button"
-            class="builder-tab"
-            :class="{ active: currentSheet === sheet.key }"
-            role="tab"
-            :aria-selected="currentSheet === sheet.key"
-            @click="onFormSheet(sheet.key)"
-          >
-            {{ sheet.tabLabel }}
-          </button>
-        </div>
-        <p v-else class="meta">{{ sheetLabel(currentSheet) }}{{ isSubForm ? 'を編集中' : 'のアイテムを編集中' }}</p>
-
-        <template v-if="!isSubForm">
-          <label class="form-label" for="f-title">商品名</label>
-          <input id="f-title" v-model="form.title" type="text" />
-          <label class="form-label" for="f-image">画像URL</label>
-          <input id="f-image" v-model="form.image" type="url" />
-          <label class="form-label" for="f-url">商品URL</label>
-          <input id="f-url" v-model="form.url" type="url" />
-          <div class="field-row">
-            <label>価格 <input v-model="form.price" type="number" min="0" /></label>
-            <label>個数 <input v-model="form.unit" type="number" min="1" /></label>
-          </div>
-          <label class="form-label" for="f-genre">ジャンル</label>
-          <select id="f-genre" v-model="form.genre">
-            <option v-for="genre in genreOptions" :key="genre" :value="genre">{{ genre }}</option>
-          </select>
-          <label class="form-label" for="f-comment">コメント</label>
-          <textarea id="f-comment" v-model="form.comment" rows="3"></textarea>
-        </template>
-
-        <template v-else>
-          <label class="form-label" for="f-service">サービス名</label>
-          <input id="f-service" v-model="form.service" type="text" />
-          <label class="form-label" for="f-purpose">用途</label>
-          <input id="f-purpose" v-model="form.purpose" type="text" />
-          <label class="form-label">入力方法</label>
-          <div class="builder-tabs" role="tablist" aria-label="入力方法">
-            <button
-              type="button"
-              class="builder-tab"
-              :class="{ active: form.basis === 'yearly' }"
-              role="tab"
-              :aria-selected="form.basis === 'yearly'"
-              @click="form.basis = 'yearly'"
-            >
-              年額で入力
-            </button>
-            <button
-              type="button"
-              class="builder-tab"
-              :class="{ active: form.basis === 'monthly' }"
-              role="tab"
-              :aria-selected="form.basis === 'monthly'"
-              @click="form.basis = 'monthly'"
-            >
-              月額で入力
-            </button>
-          </div>
-          <label class="form-label" for="f-amount">{{ form.basis === 'monthly' ? '月額' : '年額' }}</label>
-          <input id="f-amount" v-model="form.amount" type="number" min="0" />
-          <label class="form-label" for="f-sub-url">URL</label>
-          <input id="f-sub-url" v-model="form.url" type="url" />
-        </template>
-
-        <div class="composer-row">
-          <span class="meta">{{ formStatus }}</span>
-          <span class="row-actions">
-            <button v-if="editingRow !== null" class="theme-toggle" type="button" @click="removeFromForm">
-              削除する
-            </button>
-            <template v-else></template>
-            <button v-if="editingRow !== null" class="theme-toggle" type="button" @click="cancelEdit">
-              編集をやめる
-            </button>
-            <template v-else></template>
-            <button class="post-button" type="button" :disabled="saving" @click="submit">
-              {{ editingRow === null ? '登録する' : '更新する' }}
-            </button>
-          </span>
-        </div>
-      </section>
+      <ItemForm
+        v-if="phase === 'ready' && tab === 'form'"
+        :form="form"
+        :title="formTitle"
+        :is-sub="isSubForm"
+        :editing="editingRow !== null"
+        :sheets="formSheets"
+        :current-sheet="currentSheet"
+        :genre-options="genreOptions"
+        :form-status="formStatus"
+        :saving="saving"
+        @sheet="onFormSheet"
+        @submit="submit"
+        @cancel="cancelEdit"
+        @remove="removeFromForm"
+      />
       <template v-else></template>
 
       <section v-if="phase === 'ready' && tab === 'share' && !isShareSession" class="table-wrap">
