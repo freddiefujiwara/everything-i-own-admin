@@ -64,8 +64,8 @@ describe('useAdmin', () => {
     expect(calls[0].idToken).toContain('.')
     expect(calls[1]).toMatchObject({ action: 'list_items', sheet: 'workman' })
     expect(calls[1].session_token).toBe('sess-token')
-    expect(localStorage.getItem('list-of-stuff-admin-session-token')).toBe('sess-token')
-    expect(localStorage.getItem('list-of-stuff-admin-session-email')).toBe('owner@example.com')
+    expect(localStorage.getItem('everything-i-own-admin-session-token')).toBe('sess-token')
+    expect(localStorage.getItem('everything-i-own-admin-session-email')).toBe('owner@example.com')
   })
 
   it('returns to the gate when the server rejects the account', async () => {
@@ -552,13 +552,13 @@ describe('useAdmin', () => {
     await admin.onCredential(credential({ email: 'owner@example.com' }))
     expect(admin.phase.value).toBe('gate')
     expect(admin.gateError.value).toBe('ログインの有効期限が切れました。再度ログインしてください。')
-    expect(localStorage.getItem('list-of-stuff-admin-session-token')).toBeNull()
+    expect(localStorage.getItem('everything-i-own-admin-session-token')).toBeNull()
   })
 
   it('restores a saved session without a Google sign-in', async () => {
     const calls = routeFetch(okHandler)
-    localStorage.setItem('list-of-stuff-admin-session-token', 'saved-token')
-    localStorage.setItem('list-of-stuff-admin-session-email', 'owner@example.com')
+    localStorage.setItem('everything-i-own-admin-session-token', 'saved-token')
+    localStorage.setItem('everything-i-own-admin-session-email', 'owner@example.com')
     const admin = useAdmin()
     expect(await admin.restoreSession()).toBe(true)
     expect(admin.phase.value).toBe('ready')
@@ -576,12 +576,12 @@ describe('useAdmin', () => {
 
   it('drops a saved session that the server no longer accepts', async () => {
     routeFetch(() => ({ ok: false, status: 401, error: 'session expired or invalid' }))
-    localStorage.setItem('list-of-stuff-admin-session-token', 'dead-token')
+    localStorage.setItem('everything-i-own-admin-session-token', 'dead-token')
     const admin = useAdmin()
     expect(await admin.restoreSession()).toBe(false)
     expect(admin.phase.value).toBe('gate')
     expect(admin.gateError.value).toBe('ログインの有効期限が切れました。再度ログインしてください。')
-    expect(localStorage.getItem('list-of-stuff-admin-session-token')).toBeNull()
+    expect(localStorage.getItem('everything-i-own-admin-session-token')).toBeNull()
   })
 
   it('revokes the session on logout and clears the saved copy', async () => {
@@ -592,7 +592,7 @@ describe('useAdmin', () => {
     expect(calls.find((c) => c.action === 'revoke_session')).toMatchObject({
       session_token: 'sess-token',
     })
-    expect(localStorage.getItem('list-of-stuff-admin-session-token')).toBeNull()
+    expect(localStorage.getItem('everything-i-own-admin-session-token')).toBeNull()
   })
 
   it('logs out without a revoke call when there is no session', async () => {

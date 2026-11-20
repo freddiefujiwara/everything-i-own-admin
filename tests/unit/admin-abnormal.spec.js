@@ -9,7 +9,7 @@ import {
   subscriptionCost,
 } from '../../src/utils/admin.js'
 
-// Abnormal cases for the shaping layer. The list-of-stuff-gas /exec
+// Abnormal cases for the shaping layer. The everything-i-own-gas /exec
 // payload is trusted to be item/subscription-shaped, but a deformed
 // row (a missing entry, a number where text is expected, amounts
 // arriving as strings) must degrade to blanks instead of throwing

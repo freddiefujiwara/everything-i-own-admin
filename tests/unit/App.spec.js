@@ -187,8 +187,8 @@ describe('App gate and sign-in', () => {
   })
 
   it('restores a saved session without showing the Google gate', async () => {
-    localStorage.setItem('list-of-stuff-admin-session-token', 'saved-token')
-    localStorage.setItem('list-of-stuff-admin-session-email', 'owner@example.com')
+    localStorage.setItem('everything-i-own-admin-session-token', 'saved-token')
+    localStorage.setItem('everything-i-own-admin-session-email', 'owner@example.com')
     const w = await mountApp()
     expect(w.text()).not.toContain('Googleログインが必要です')
     expect(w.text()).toContain('owner@example.com でログイン中')
@@ -504,7 +504,7 @@ describe('App share sessions and chrome', () => {
     const toggle = w.findAll('button').find((b) => b.text() === 'ライト')
     await toggle.trigger('click')
     expect(document.documentElement.getAttribute('data-theme')).toBe('light')
-    expect(localStorage.getItem('list-of-stuff-admin-theme')).toBe('light')
+    expect(localStorage.getItem('everything-i-own-admin-theme')).toBe('light')
     expect(w.findAll('button').find((b) => b.text() === 'ダーク')).toBeTruthy()
   })
 
