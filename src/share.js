@@ -41,7 +41,7 @@ export function formatShareExpiry(expiresAt) {
     return "";
   }
   const pad = (n) => String(n).padStart(2, "0");
-  const ymd = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+  const ymd = `${String(date.getFullYear()).padStart(4, "0")}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
   return `${ymd} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
