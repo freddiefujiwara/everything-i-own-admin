@@ -153,23 +153,14 @@ export function useAdmin() {
   // flight, `loading` is true so the page can hide the previous
   // sheet's rows instead of leaving them on screen.
   const loadItems = async () => {
-    if (currentSheet.value === 'all') {
-      loading.value = true
-      listStatus.value = ''
-      try {
-        return await loadAll()
-      } catch (err) {
-        listStatus.value = '読み込みに失敗しました'
-        return { ok: false, error: String(err) }
-      } finally {
-        loading.value = false
-      }
-    }
     loading.value = true
     // The loading row in the list says 読み込み中…; the status line
     // stays blank meanwhile so the text appears only once.
     listStatus.value = ''
     try {
+      if (currentSheet.value === 'all') {
+        return await loadAll()
+      }
       const res = await readSheet(currentSheet.value)
       if (!res.ok) {
         listStatus.value = res.error || '読み込みに失敗しました'
